@@ -23,7 +23,7 @@ public class Module extends BaseEntity {
      private Contenido contenido; 
      private String videoUrl;
      private Integer durationInMinutes;    
-     @Enumerated (EnumType.ORDINAL)
+     @Enumerated (EnumType.STRING)
      @Column(length = 30)
      private Status status;
 
