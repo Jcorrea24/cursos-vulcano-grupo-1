@@ -8,9 +8,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.MapsId;
+
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -26,30 +24,32 @@ import lombok.Setter;
 @AllArgsConstructor
 public class UserProfile extends BaseEntity {
 
-    //@OneToOne(fetch = FetchType.LAZY)
-    //@MapsId // Indica que el ID de esta entidad se deriva de la entidad User
-    //@JoinColumn(name = "user_id")
-    //private User user;
-
     @Column(length = 50, nullable = false)
     private String firstName;
 
     @Column(length = 50, nullable = false)
     private String lastName;
 
-    @Column(length = 50, nullable = false)
+    @Column(length = 100, unique = true, nullable = false)
     private String email;
 
     @Column(columnDefinition = "TEXT")
     private String bio;
 
-    private String profilePictureUrl; // Ruta al almacenamiento (S3, Cloudinary, etc.)
+    /** URL de la imagen de perfil almacenada en un servicio externo (ej. S3, Cloudinary). */
+    @Column(name = "profile_picture_url", columnDefinition = "TEXT")
+    private String profilePictureUrl;
 
     private LocalDate birthDate;
 
+    @Column(name = "phone_number", length = 20)
     private String phoneNumber;
 
-    @Enumerated(EnumType.ORDINAL)
-    private Status status;
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20, nullable = false)
+    private Status status = Status.ACTIVE;
+
+    @OneToOne(mappedBy = "profile") // Nombre del atributo en Usuario
+    private User user; 
 
 }
