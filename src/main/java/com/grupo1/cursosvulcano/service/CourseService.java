@@ -16,12 +16,16 @@ public class CourseService {
         return courseRepository.findAll();
     }
 
+    public Course getCourseById(Long id) {
+        return courseRepository.findById(id).orElseThrow();
+    }
+
     public Course createCourse(Course course) {
         return courseRepository.save(course);
     }
 
-    public Course updateCourse (Long id, Course course) {
-        course.setId(id); 
+    public Course updateCourse(Long id, Course course) {
+        course.setId(id);
         return courseRepository.save(course);
     }
 
