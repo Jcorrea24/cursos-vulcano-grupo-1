@@ -37,7 +37,7 @@ public class Course extends BaseEntity {
     @Column(name = "is_published")
     private Boolean isPublished = false;
 
-    @Enumerated (EnumType.ORDINAL)
+    @Enumerated (EnumType.STRING)
     private Status status;
 
 }
