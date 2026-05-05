@@ -22,23 +22,15 @@ public class ClassScheduleService {
     private final ClassScheduleRepository classScheduleRepository;
 
     public List<AvailableScheduleGroupResponse> getAvailableSchedules(Long expertId) {
-        // Datos genéricos de horarios disponibles agrupados por fecha
-        List<LocalDateTime> scheduleTimes = List.of(
-            LocalDateTime.of(2027, 10, 1, 9, 0),
-            LocalDateTime.of(2026, 8, 20, 11, 0),
-            LocalDateTime.of(2026, 9, 20, 14, 0),
-            LocalDateTime.of(2026, 7, 21, 10, 0),
-            LocalDateTime.of(2026, 5, 21, 13, 0),
-            LocalDateTime.of(2026, 6, 21, 16, 0),
-            LocalDateTime.of(2026, 8, 22, 8, 0),
-            LocalDateTime.of(2026, 5, 22, 12, 0)
-        );
-
+        List<ClassSchedule> schedules = classScheduleRepository.findByExpertId(expertId);
         Map<String, List<String>> grouped = new HashMap<>();
 
-        for (LocalDateTime dateTime : scheduleTimes) {
-            String date = dateTime.toLocalDate().toString();
-            String time = formatTime(dateTime.getHour(), dateTime.getMinute());
+        for (ClassSchedule schedule : schedules) {
+            if (schedule.getStartTime() == null) {
+                continue;
+            }
+            String date = schedule.getStartTime().toLocalDate().toString();
+            String time = formatTime(schedule.getStartTime().getHour(), schedule.getStartTime().getMinute());
             grouped.computeIfAbsent(date, k -> new ArrayList<>()).add(time);
         }
 
@@ -64,27 +56,61 @@ public class ClassScheduleService {
         return schedules.stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
-    public ClassScheduleResponse scheduleClass(Long studentId, ClassScheduleRequest request) {
+    public List<ClassScheduleResponse> getExpertSchedules(Long expertId) {
+        List<ClassSchedule> schedules = classScheduleRepository.findByExpertId(expertId);
+        return schedules.stream().map(this::mapToResponse).collect(Collectors.toList());
+    }
+
+    public List<ClassScheduleResponse> getAllSchedules() {
+        List<ClassSchedule> schedules = classScheduleRepository.findAll();
+        return schedules.stream().map(this::mapToResponse).collect(Collectors.toList());
+    }
+
+    public ClassScheduleResponse scheduleClass(ClassScheduleRequest request) {
         ClassSchedule schedule = new ClassSchedule();
-        schedule.setStudentId(studentId);
+        schedule.setStudentId(request.getStudentId());
+        schedule.setExpertId(request.getExpertId());
         schedule.setCourseId(request.getCourseId());
         schedule.setStartTime(request.getStartTime());
+        schedule.setEndTime(request.getEndTime());
         schedule.setNotes(request.getNotes());
-        schedule.setStatus("SCHEDULED");
+        schedule.setStatus(request.getStudentId() != null ? "SCHEDULED" : "AVAILABLE");
         ClassSchedule saved = classScheduleRepository.save(schedule);
         return mapToResponse(saved);
+    }
+
+    public ClassScheduleResponse scheduleClass(Long studentId, ClassScheduleRequest request) {
+        request.setStudentId(studentId);
+        return scheduleClass(request);
     }
 
     public ClassScheduleResponse modifySchedule(Long scheduleId, Long studentId, ClassScheduleRequest request) {
         ClassSchedule schedule = classScheduleRepository.findById(scheduleId)
             .orElseThrow(() -> new RuntimeException("Schedule not found"));
-        if (!schedule.getStudentId().equals(studentId)) {
+        if (schedule.getStudentId() != null && !schedule.getStudentId().equals(studentId)) {
             throw new RuntimeException("Unauthorized");
         }
         schedule.setStartTime(request.getStartTime());
+        schedule.setEndTime(request.getEndTime());
         schedule.setNotes(request.getNotes());
+        schedule.setExpertId(request.getExpertId());
+        schedule.setCourseId(request.getCourseId());
         ClassSchedule saved = classScheduleRepository.save(schedule);
         return mapToResponse(saved);
+    }
+
+    public ClassScheduleResponse updateStatus(Long scheduleId, String status) {
+        ClassSchedule schedule = classScheduleRepository.findById(scheduleId)
+            .orElseThrow(() -> new RuntimeException("Schedule not found"));
+        schedule.setStatus(status);
+        ClassSchedule saved = classScheduleRepository.save(schedule);
+        return mapToResponse(saved);
+    }
+
+    public void deleteSchedule(Long scheduleId) {
+        ClassSchedule schedule = classScheduleRepository.findById(scheduleId)
+            .orElseThrow(() -> new RuntimeException("Schedule not found"));
+        classScheduleRepository.delete(schedule);
     }
 
     public void cancelSchedule(Long scheduleId, Long studentId) {
@@ -100,6 +126,7 @@ public class ClassScheduleService {
         ClassScheduleResponse response = new ClassScheduleResponse();
         response.setId(schedule.getId());
         response.setStudentId(schedule.getStudentId());
+        response.setExpertId(schedule.getExpertId());
         response.setCourseId(schedule.getCourseId());
         response.setStartTime(schedule.getStartTime());
         response.setEndTime(schedule.getEndTime());

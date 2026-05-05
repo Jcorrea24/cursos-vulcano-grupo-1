@@ -32,14 +32,28 @@ public class ClassScheduleController {
     }
  
     /**
-     * GET /api/schedules/student/{studentId}
-     * Retorna todas las clases activas agendadas por un estudiante.
+     * GET /api/schedules
+     * Retorna todas las clases guardadas en el sistema.
      */
+    @GetMapping
+    public ResponseEntity<List<ClassScheduleResponse>> getAllSchedules() {
+        List<ClassScheduleResponse> schedules = classScheduleService.getAllSchedules();
+        return ResponseEntity.ok(schedules);
+    }
+
     @GetMapping("/student/{studentId}")
     public ResponseEntity<List<ClassScheduleResponse>> getStudentSchedules(
             @PathVariable Long studentId) {
  
         List<ClassScheduleResponse> schedules = classScheduleService.getStudentSchedules(studentId);
+        return ResponseEntity.ok(schedules);
+    }
+
+    @GetMapping("/expert/{expertId}")
+    public ResponseEntity<List<ClassScheduleResponse>> getExpertSchedules(
+            @PathVariable Long expertId) {
+ 
+        List<ClassScheduleResponse> schedules = classScheduleService.getExpertSchedules(expertId);
         return ResponseEntity.ok(schedules);
     }
  
@@ -55,7 +69,24 @@ public class ClassScheduleController {
         ClassScheduleResponse response = classScheduleService.scheduleClass(studentId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    @PostMapping
+    public ResponseEntity<ClassScheduleResponse> createSchedule(
+            @Valid @RequestBody ClassScheduleRequest request) {
  
+        ClassScheduleResponse response = classScheduleService.scheduleClass(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ClassScheduleResponse> updateScheduleStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody ClassScheduleRequest request) {
+ 
+        ClassScheduleResponse response = classScheduleService.updateStatus(id, request.getStatus());
+        return ResponseEntity.ok(response);
+    }
+
     /**
      * PUT /api/schedules/{scheduleId}/student/{studentId}
      * Modifica una clase ya agendada.
@@ -70,6 +101,12 @@ public class ClassScheduleController {
         return ResponseEntity.ok(response);
     }
  
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteSchedule(@PathVariable Long id) {
+        classScheduleService.deleteSchedule(id);
+        return ResponseEntity.noContent().build();
+    }
+
     /**
      * DELETE /api/schedules/{scheduleId}/student/{studentId}
      * Cancela una clase agendada.
