@@ -34,14 +34,19 @@ public class UserController {
      * El JSON enviado debe tener una estructura anidada para el perfil.
      */
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        // Extraemos el perfil que viene dentro del objeto User
-        UserProfile profile = user.getProfile();
-        
-        // Llamamos al servicio que ya tiene la lógica del método helper y el cascade
-        User savedUser = userService.createUser(user, profile);
-        
-        return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
+    public ResponseEntity<?> createUser(@RequestBody User user) {
+        try {
+            // Extraemos el perfil que viene dentro del objeto User
+            UserProfile profile = user.getProfile();
+            
+            // Llamamos al servicio que ya tiene la lógica del método helper y el cascade
+            User savedUser = userService.createUser(user, profile);
+            
+            return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
+        } catch (IllegalArgumentException ex) {
+            // Devolvemos un JSON con clave "message" para que el frontend lo parsee consistentemente
+            return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
+        }
     }
 
     /**
@@ -94,5 +99,22 @@ public class UserController {
         UserRole role = UserRole.valueOf(roleStr);
         return ResponseEntity.ok(userService.updateUserRole(id, role));
     }
+
+    /**
+     * Inscribir un usuario en un curso.
+     * POST /api/users/{userId}/courses/{courseId}
+     */
+    @PostMapping("/{userId}/courses/{courseId}")
+    public ResponseEntity<?> enrollInCourse(@PathVariable Long userId, @PathVariable Long courseId) {
+        try {
+            User updatedUser = userService.enrollInCourse(userId, courseId);
+            return ResponseEntity.ok(updatedUser);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
+        }
+    }
 }
+
 

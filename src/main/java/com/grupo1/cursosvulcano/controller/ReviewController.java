@@ -6,7 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.grupo1.cursosvulcano.model.entity.Review;
+import com.grupo1.cursosvulcano.dto.request.ReviewRequest;
+import com.grupo1.cursosvulcano.dto.response.ReviewResponse;
 import com.grupo1.cursosvulcano.service.ReviewService;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,21 +27,26 @@ public class ReviewController {
     private ReviewService reviewService;
 
     @GetMapping
-    public List<Review> getAllReviews() {
+    public List<ReviewResponse> getAllReviews() {
         return reviewService.getAllReviews();
     }
 
-    @PostMapping
-    public Review saveReview(@RequestBody Review review) {
-        return reviewService.saveReview(review);
-    }
-    
-    @PutMapping
-    public Review updateReview(@PathVariable Long id, @RequestBody Review review) {
-        return reviewService.updateReview(id, review);
+    @GetMapping("/{id}")
+    public ReviewResponse getReviewById(@PathVariable Long id) {
+        return reviewService.getReviewById(id);
     }
 
-    @DeleteMapping
+    @PostMapping
+    public ReviewResponse saveReview(@RequestBody ReviewRequest reviewRequest) {
+        return reviewService.saveReview(reviewRequest);
+    }
+    
+    @PutMapping("/{id}")
+    public ReviewResponse updateReview(@PathVariable Long id, @RequestBody ReviewRequest reviewRequest) {
+        return reviewService.updateReview(id, reviewRequest);
+    }
+
+    @DeleteMapping("/{id}")
     public void deleteReview(@PathVariable Long id) {
         reviewService.deleteReview(id);
     }
